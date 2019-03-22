@@ -1,14 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
 using System.Runtime.Serialization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 
 namespace BuildTrackerApi.Services
 {
     [Serializable]
     internal class AppException : Exception
     {
+        
+
         public HttpStatusCode StatusCode { get; internal set; }
         public AppException()
         {
@@ -34,5 +38,7 @@ namespace BuildTrackerApi.Services
         {
             this.StatusCode = HttpStatusCode.InternalServerError;
         }
+
+       
     }
 }

@@ -33,13 +33,13 @@ namespace BuildTrackerApi.Services.Authorization
 
         private void CanModifyOrReadUser(AuthorizationHandlerContext context, OperationAuthorizationRequirement requirement, User resource)
         {
-            if(isUser(context.User, resource))
+            if(IsUser(context.User, resource))
             {
                 context.Succeed(requirement);
             }
         }
 
-        private bool isUser(ClaimsPrincipal user, User resource)
+        private bool IsUser(ClaimsPrincipal user, User resource)
         {
             return int.Parse(user.Identity.Name) == resource.Id;
         }

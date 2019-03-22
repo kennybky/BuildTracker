@@ -25,7 +25,6 @@ namespace BuildTrackerApi.Controllers
     public class UsersController : ControllerBase
     {
         private IUserService _userService;
-        private UserManager<User> _userManager;
         private IMapper _mapper;
         private readonly AppSettings _appSettings;
         private readonly IAuthorizationService _authorizationService;
@@ -41,14 +40,13 @@ namespace BuildTrackerApi.Controllers
             _mapper = mapper;
             _appSettings = appSettings.Value;
             _authorizationService = authorizationService;
-            _userManager = userManager;
         }
 
         [AllowAnonymous]
         [HttpPost("authenticate")]
-        public IActionResult Authenticate([FromBody]UserDto userDto)
+        public async Task<IActionResult> Authenticate([FromBody]UserDto userDto)
         {
-            var user = _userService.Authenticate(userDto.UserName, userDto.Password);
+            var user = await _userService.Authenticate(userDto.UserName, userDto.Password);
 
             if (user == null)
                 return BadRequest(new { message = "Username or password is incorrect" });
@@ -68,22 +66,20 @@ namespace BuildTrackerApi.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
+            userDto = _mapper.Map<UserDto>(user);
             // return basic user info (without password) and token to store client side
             return Ok(new
             {
-                user.Id,
-                user.UserName,
-               user.FirstName,
-                user.LastName,
-                user.Role,
-                Token = tokenString
+              User = userDto,
+                Token = tokenString,
+                Expires = DateTime.UtcNow.AddDays(7)
             });
         }
 
-        // Change to Admin later
-        [AllowAnonymous]
+       
+        [Authorize(Roles = "ADMIN")]
         [HttpPost("register")]
-        public IActionResult Register([FromBody]UserDto userDto)
+        public async Task<IActionResult> Register([FromBody]UserDto userDto)
         {
             // map dto to entity
             var user = _mapper.Map<User>(userDto);
@@ -91,10 +87,10 @@ namespace BuildTrackerApi.Controllers
             try
             {
                 // save 
-                _userService.Create(user, userDto.Password);
+              await _userService.Create(user, userDto.Password);
                 return Ok();
             }
-            catch (AppException ex)
+            catch (Exception ex)
             {
                 // return error message if there was an exception
                 return BadRequest(new { message = ex.Message });
@@ -112,14 +108,15 @@ namespace BuildTrackerApi.Controllers
                 user.UserName,
                 user.FirstName,
                 user.LastName,
+                user.Email,
+                user.PhoneNumber,
                 user.Role
             });
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public IActionResult GetAll()
         {
-            var allowed = await _authorizationService.AuthorizeAsync(HttpContext.User, new User(), Operations.Read);
             var users = _userService.GetAll();
             var userDtos = _mapper.Map<IList<UserDto>>(users);
             return Ok(userDtos);
@@ -134,11 +131,16 @@ namespace BuildTrackerApi.Controllers
         }
 
         [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody]UserDto userDto)
+        public async Task<IActionResult> Update(int id, [FromBody]UserDto userDto)
         {
             // map dto to entity and set id
             var user = _mapper.Map<User>(userDto);
             user.Id = id;
+            var allowed = await _authorizationService.AuthorizeAsync(HttpContext.User, user, Operations.Update);
+            if (!allowed.Succeeded)
+            {
+                return Forbid();
+            }
 
             try
             {
@@ -153,7 +155,68 @@ namespace BuildTrackerApi.Controllers
             }
         }
 
+        [HttpPut("password/{id}")]
+        public async Task<IActionResult> ChangePassword(int id, [FromBody]string oldPassword, [FromBody]string newPassword)
+        {
+            // map dto to entity and set id
+            var user = _userService.GetById(id);
+            if(user == null)
+            {
+                return NotFound(new { message = "User Not found" });
+            }
+
+            if (HttpContext.User.Identity.Name != id.ToString())
+            {
+                return Forbid();
+            }
+
+            try
+            {
+                // save 
+               await _userService.ChangePassword(user, oldPassword, newPassword);
+                return Ok();
+            }
+            catch (AppException ex)
+            {
+                // return error message if there was an exception
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [Authorize("ADMIN, PROJECT_MANAGER, DEVELOPER")]
+        [HttpPut("role/{id}")]
+        public IActionResult ChangeRole(int id, [FromBody] Role role)
+        {
+            // map dto to entity and set id
+            var user = _userService.GetById(id);
+            var requester = _userService.GetById(int.Parse(HttpContext.User.Identity.Name));
+            if (user == null || requester == null)
+            {
+                return NotFound(new { message = "User Not found" });
+            }
+
+            var allowed = (user.Role < requester.Role) && (role <= requester.Role);
+
+            if(!allowed)
+            {
+                return Forbid();
+            }
+
+            try
+            {
+                // save 
+                _userService.ChangeRole(user, role);
+                return Ok();
+            }
+            catch (AppException ex)
+            {
+                // return error message if there was an exception
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpDelete("{id}")]
+        [Authorize(Roles = "ADMIN")]
         public IActionResult Delete(int id)
         {
             _userService.Delete(id);

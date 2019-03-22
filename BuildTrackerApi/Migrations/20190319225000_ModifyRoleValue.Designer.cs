@@ -4,14 +4,16 @@ using BuildTrackerApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BuildTrackerApi.Migrations
 {
     [DbContext(typeof(BuildTrackerContext))]
-    partial class BuildTrackerContextModelSnapshot : ModelSnapshot
+    [Migration("20190319225000_ModifyRoleValue")]
+    partial class ModifyRoleValue
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -48,17 +50,15 @@ namespace BuildTrackerApi.Migrations
 
                     b.Property<int>("UpdatePersonId");
 
-                    b.Property<string>("Version")
-                        .IsRequired();
+                    b.Property<string>("Version");
 
                     b.HasKey("Id");
 
                     b.HasIndex("BuildPersonId");
 
-                    b.HasIndex("UpdatePersonId");
+                    b.HasIndex("ProductName");
 
-                    b.HasIndex("ProductName", "Version", "Platform")
-                        .IsUnique();
+                    b.HasIndex("UpdatePersonId");
 
                     b.ToTable("Builds");
                 });

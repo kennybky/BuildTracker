@@ -4,14 +4,16 @@ using BuildTrackerApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BuildTrackerApi.Migrations
 {
     [DbContext(typeof(BuildTrackerContext))]
-    partial class BuildTrackerContextModelSnapshot : ModelSnapshot
+    [Migration("20190319183359_UseIdentity")]
+    partial class UseIdentity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -48,17 +50,15 @@ namespace BuildTrackerApi.Migrations
 
                     b.Property<int>("UpdatePersonId");
 
-                    b.Property<string>("Version")
-                        .IsRequired();
+                    b.Property<string>("Version");
 
                     b.HasKey("Id");
 
                     b.HasIndex("BuildPersonId");
 
-                    b.HasIndex("UpdatePersonId");
+                    b.HasIndex("ProductName");
 
-                    b.HasIndex("ProductName", "Version", "Platform")
-                        .IsUnique();
+                    b.HasIndex("UpdatePersonId");
 
                     b.ToTable("Builds");
                 });
@@ -127,22 +127,22 @@ namespace BuildTrackerApi.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed");
 
-                    b.Property<int?>("Role")
+                    b.Property<int>("Role")
                         .ValueGeneratedOnAdd()
-                        .HasDefaultValue(0);
+                        .HasDefaultValue(3);
 
                     b.Property<string>("SecurityStamp");
 
                     b.Property<bool>("TwoFactorEnabled");
 
-                    b.Property<string>("UserName")
-                        .IsRequired();
+                    b.Property<string>("UserName");
 
                     b.HasKey("Id");
 
                     b.HasIndex("UserName")
                         .IsUnique()
-                        .HasName("IX_Username");
+                        .HasName("IX_Username")
+                        .HasFilter("[UserName] IS NOT NULL");
 
                     b.ToTable("Users");
                 });

@@ -35,15 +35,15 @@ namespace BuildTrackerApi.Models
                 entity.HasIndex(e => e.UserName)
                     .HasName("IX_Username")
                     .IsUnique();
-
+                entity.Property(e => e.UserName)
+                    .IsRequired();
 
                 entity.Property(e => e.PasswordHash)
                     .IsRequired();
 
-                entity.Property(e => e.Role).HasDefaultValue(Role.USER).IsRequired();
+                entity.Property(e => e.Role).HasDefaultValue(Role.USER);//.IsRequired(false);
 
-                entity.Property(e => e.PasswordSalt)
-                    .IsRequired();
+
 
             });
 
@@ -60,8 +60,10 @@ namespace BuildTrackerApi.Models
                 entity.Property(e => e.BuildDate).HasDefaultValueSql("(getutcdate())");
 
                 entity.Property(e => e.LastUpdate).HasDefaultValueSql("(getutcdate())");
-                entity.HasOne(e => e.Product).WithMany(p => p.Builds).HasPrincipalKey(e=> e.Name)
+                entity.HasOne(e => e.Product).WithMany(p => p.Builds).HasPrincipalKey(e => e.Name).HasForeignKey(e => e.ProductName)
                 .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.ProductName, e.Version, e.Platform }).IsUnique();
 
                 entity.HasOne(e => e.BuildPerson).WithMany().OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne(e => e.UpdatePerson).WithMany().OnDelete(DeleteBehavior.Restrict);

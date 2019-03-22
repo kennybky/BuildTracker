@@ -1,31 +1,40 @@
 ﻿using BuildTrackerApi.Models;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace BuildTrackerApi.Services
 {
     public interface IUserService
     {
-        User Authenticate(string username, string password);
+        Task<User> Authenticate(string username, string password);
         IEnumerable<User> GetAll();
         User GetById(int id);
-        User Create(User user, string password);
+
+        Task<User> GetByUserName(string UserName);
+        Task<User> Create(User user, string password);
         void Update(User user, string password = null);
         void Delete(int id);
+        void ChangeRole(User userParam, Role role);
+
+        Task<bool> ChangePassword(User userParam, string oldPassword, string newPassword);
     }
 
     public class UserService : IUserService
     {
         private BuildTrackerContext _context;
+        private readonly UserManager<User> _userManager;
 
-        public UserService(BuildTrackerContext context)
+        public UserService(BuildTrackerContext context, UserManager<User> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
-        public User Authenticate(string username, string password)
+        public async Task<User> Authenticate(string username, string password)
         {
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
                 return null;
@@ -36,12 +45,27 @@ namespace BuildTrackerApi.Services
             if (user == null)
                 return null;
 
-            // check if password is correct
-            if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+            if(await _userManager.IsLockedOutAsync(user))
+            {
+                throw new AppException("This account is temporarily locked out", HttpStatusCode.Forbidden);
+            }
+    
+            var result = await _userManager.CheckPasswordAsync(user, password);
+
+            if(result)
+            {
+                return user;
+            } else
+            {
+                await _userManager.AccessFailedAsync(user);
                 return null;
+            }
+           
+            // check if password is correct
+            //if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+            //    return null;
 
             // authentication successful
-            return user;
         }
 
         public IEnumerable<User> GetAll()
@@ -54,7 +78,12 @@ namespace BuildTrackerApi.Services
             return _context.Users.Find(id);
         }
 
-        public User Create(User user, string password)
+        public async Task<User> GetByUserName(string UserName)
+        {
+            return await _userManager.FindByNameAsync(UserName);
+        }
+
+        public async Task<User> Create(User user, string password)
         {
             // validation
             if (string.IsNullOrWhiteSpace(password))
@@ -63,16 +92,29 @@ namespace BuildTrackerApi.Services
             if (_context.Users.Any(x => x.UserName == user.UserName))
                 throw new AppException("Username \"" + user.UserName + "\" is already taken");
 
-            byte[] passwordHash, passwordSalt;
-            CreatePasswordHash(password, out passwordHash, out passwordSalt);
+           var result =  await  _userManager.CreateAsync(user, password);
 
-            user.PasswordHash = passwordHash;
-            user.PasswordSalt = passwordSalt;
+            //byte[] passwordHash, passwordSalt;
+            //CreatePasswordHash(password, out passwordHash, out passwordSalt);
 
-            _context.Users.Add(user);
-            _context.SaveChanges();
+            //user.PasswordHash = passwordHash;
+            //user.PasswordSalt = passwordSalt;
 
-            return user;
+            //_context.Users.Add(user);
+            // _context.SaveChanges();
+
+            if (result.Succeeded)
+            {
+                return user;
+            } else
+            {
+                string message = "";
+                foreach (var error in result.Errors)
+                {
+                    message += error.Description + "\n";
+                }
+                throw new AppException(message.Trim(), HttpStatusCode.BadRequest);
+            }
         }
 
         public void Update(User userParam, string password = null)
@@ -93,20 +135,43 @@ namespace BuildTrackerApi.Services
             user.FirstName = userParam.FirstName;
             user.LastName = userParam.LastName;
             user.UserName = userParam.UserName;
+            user.Email = userParam.Email;
+            user.PhoneNumber = userParam.PhoneNumber;
 
-            // update password if it was entered
-            if (!string.IsNullOrWhiteSpace(password))
-            {
-                byte[] passwordHash, passwordSalt;
-                CreatePasswordHash(password, out passwordHash, out passwordSalt);
-
-                user.PasswordHash = passwordHash;
-                user.PasswordSalt = passwordSalt;
-            }
-
-            _context.Users.Update(user);
-            _context.SaveChanges();
+            
+            _userManager.UpdateAsync(user).Wait();
+          
         }
+
+        public void ChangeRole(User userParam, Role role)
+        {
+            var user = _context.Users.Find(userParam.Id);
+
+            if (user == null)
+                throw new AppException("User not found");
+
+            user.Role = role;
+
+            _userManager.UpdateAsync(user).Wait();
+        }
+
+        public async Task<bool> ChangePassword(User userParam, string oldPassword, string newPassword)
+        {
+            var user = _context.Users.Find(userParam.Id);
+
+            if (user == null)
+                throw new AppException("User not found");
+
+            var valid = await _userManager.CheckPasswordAsync(user, oldPassword);
+            if(valid)
+            {
+                var result = await _userManager.ChangePasswordAsync(user, oldPassword, newPassword);
+                return result.Succeeded;
+            }
+            return false;
+        }
+
+       
 
         public void Delete(int id)
         {
@@ -150,5 +215,7 @@ namespace BuildTrackerApi.Services
 
             return true;
         }
+
+      
     }
 }

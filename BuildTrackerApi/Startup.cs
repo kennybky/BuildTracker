@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -80,13 +81,35 @@ namespace BuildTrackerApi
                 };
             });
 
+            services.AddDefaultIdentity<User>()
+        .AddEntityFrameworkStores<BuildTrackerContext>();
+
             // configure DI for application services
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IAuthorizationHandler, UserAuthorizationHandler>();
+
+
+
+            services.Configure<IdentityOptions>(options =>
+            {
+                // Password Requirements
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireNonAlphanumeric = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequiredLength = 6;
+                options.Password.RequiredUniqueChars = 1;
+
+
+                // Default Lockout settings.
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.AllowedForNewUsers = true;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider serviceProvider)
         {
             if (env.IsDevelopment())
             {
@@ -104,14 +127,40 @@ namespace BuildTrackerApi
 
             app.UseAuthentication();
 
-
-
+            
             //app.UseMiddleware<JWTAuthentication>();
 
             app.UseMiddleware<RestExceptionHander>();
 
             app.UseHttpsRedirection();
             app.UseMvc();
+
+            AddSampleData(serviceProvider).Wait();
+        }
+
+        public async Task AddSampleData(IServiceProvider serviceProvider)
+        {
+            var user = new User()
+            {
+                UserName = "johndoe",
+                FirstName = "John",
+                LastName = "Doe",
+                Role = Role.ADMIN,
+                Email = "johndoe@email.com",
+                LockoutEnabled = true
+            };
+            var userService = serviceProvider.GetRequiredService<IUserService>();
+            try
+            {
+                if((await userService.GetByUserName(user.UserName)) == null)
+                {
+                    var result = await userService.Create(user, "P@ssw0rd");
+                }
+            } catch(Exception e)
+            {
+                System.Diagnostics.Debug.WriteLine(e);
+            }
+
         }
     }
 }

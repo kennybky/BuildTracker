@@ -11,7 +11,11 @@ namespace BuildTrackerApi.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+
+        [Required]
         public string Version { get; internal set; }
+
+        public string ProductName { get; set; }
         [Required]
         public virtual Product Product { get; internal set; }
         [Required]
