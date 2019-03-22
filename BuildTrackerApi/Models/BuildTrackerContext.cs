@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BuildTrackerApi.Models
 {
@@ -20,6 +21,8 @@ namespace BuildTrackerApi.Models
         public virtual DbSet<Product> Products { get; set; }
         public virtual DbSet<User> Users { get; set; }
 
+        public virtual DbSet<Test> Tests { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -30,6 +33,23 @@ namespace BuildTrackerApi.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            var RoleConverter = new ValueConverter<Role, string>(
+              v => v.ToString(),
+                v => (Role)Enum.Parse(typeof(Role), v)); 
+
+            var BuildTypeConverter = new ValueConverter<BuildType, string>(
+              v => v.ToString(),
+                  v => (BuildType)Enum.Parse(typeof(BuildType), v));
+
+            var TestTypeConverter = new ValueConverter<TestType, string>(
+              v => v.ToString(),
+                  v => (TestType)Enum.Parse(typeof(TestType), v));
+
+            var PlatformConverter = new ValueConverter<Platform, string>(
+              v => v.ToString(),
+                  v => (Platform)Enum.Parse(typeof(Platform), v));
+
+
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasIndex(e => e.UserName)
@@ -41,9 +61,11 @@ namespace BuildTrackerApi.Models
                 entity.Property(e => e.PasswordHash)
                     .IsRequired();
 
-                entity.Property(e => e.Role).HasDefaultValue(Role.USER);//.IsRequired(false);
+                entity.Property(e => e.Role).HasConversion(RoleConverter);
 
+                entity.Property(e => e.Role).HasDefaultValue(Role.USER);
 
+               
 
             });
 
@@ -63,6 +85,9 @@ namespace BuildTrackerApi.Models
                 entity.HasOne(e => e.Product).WithMany(p => p.Builds).HasPrincipalKey(e => e.Name).HasForeignKey(e => e.ProductName)
                 .OnDelete(DeleteBehavior.Restrict);
 
+                entity.Property(e => e.Platform).HasConversion(PlatformConverter);
+                entity.Property(e => e.Type).HasConversion(BuildTypeConverter);
+
                 entity.HasIndex(e => new { e.ProductName, e.Version, e.Platform }).IsUnique();
 
                 entity.HasOne(e => e.BuildPerson).WithMany().OnDelete(DeleteBehavior.Restrict);
@@ -80,6 +105,17 @@ namespace BuildTrackerApi.Models
 
                 entity.HasOne(d => d.Product)
                     .WithMany(p => p.ProductDevelopers);
+            });
+
+            modelBuilder.Entity<Test>(entity =>
+            {
+                entity.Property(e => e.Platform).HasConversion(PlatformConverter);
+                entity.Property(e => e.Type).HasConversion(TestTypeConverter);
+                entity.HasOne(t => t.Build).WithMany(b => b.Tests).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(t => t.TestPerson).WithMany().OnDelete(DeleteBehavior.Restrict);
+                entity.Property(t => t.TestDate).HasDefaultValueSql("(getutcdate())");
+
+                entity.Property(t=> t.Comments).HasColumnType("text");
             });
         }
     }

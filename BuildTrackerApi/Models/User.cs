@@ -23,16 +23,14 @@ namespace BuildTrackerApi.Models
         [PersonalData]
         public string LastName { get; internal set; }
 
-
-
-        //public byte[] PasswordHash { get; internal set; }
-        //public byte[] PasswordSalt { get; internal set; }
-
     }
 
     
     public enum Role
     {
-       USER = 0, DEVELOPER = 1, PROJECT_MANAGER = 2, ADMIN = 3
+        USER = 0,
+        DEVELOPER = 1,
+        PROJECT_MANAGER = 2,
+        ADMIN = 3
     }
 }

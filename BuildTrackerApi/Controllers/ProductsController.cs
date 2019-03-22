@@ -44,7 +44,7 @@ namespace BuildTrackerApi.Controllers
 
         // PUT: api/Products/5
         [HttpPut("{id}")]
-        [Authorize("ADMIN, PROJECT_MANAGER")]
+        [Authorize(Roles = "ADMIN, PROJECT_MANAGER")]
         public async Task<IActionResult> PutProduct(int id, Product product)
         {
             if (id != product.Id)
@@ -75,7 +75,7 @@ namespace BuildTrackerApi.Controllers
 
         // POST: api/Products
         [HttpPost]
-        [Authorize("ADMIN, PROJECT_MANAGER")]
+        [Authorize(Roles = "ADMIN, PROJECT_MANAGER")]
         public async Task<ActionResult<Product>> PostProduct(Product product)
         {
             _context.Products.Add(product);
@@ -85,7 +85,7 @@ namespace BuildTrackerApi.Controllers
         }
 
         // DELETE: api/Products/5
-        [Authorize("ADMIN")]
+        [Authorize(Roles = "ADMIN")]
         [HttpDelete("{id}")]
         public async Task<ActionResult<Product>> DeleteProduct(int id)
         {

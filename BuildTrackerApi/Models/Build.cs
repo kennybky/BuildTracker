@@ -18,8 +18,8 @@ namespace BuildTrackerApi.Models
         public string ProductName { get; set; }
         [Required]
         public virtual Product Product { get; internal set; }
-        [Required]
-        public  DateTime BuildDate { get; internal set; }
+       
+        public  DateTime? BuildDate { get; internal set; }
         [Required]
         public virtual User BuildPerson { get; internal set; }
 
@@ -28,16 +28,38 @@ namespace BuildTrackerApi.Models
 
         [Required]
         public string BuildNumber { get; internal set; }
+
         [Required]
-        public string Platform { get; internal set; }
+        public Platform Platform { get; internal set; }
+
+       
         [Required]
         public BuildType Type  { get; internal set; }
-        [Required]
-        public DateTime LastUpdate { get; internal set; }
+       
+        public DateTime? LastUpdate { get; internal set; }
+
+        public virtual ICollection<Test> Tests { get; set; }
     }
 
     public enum BuildType
     {
-        TEST = 0, ALPHA = 1, BETA = 2, PRODUCTION = 3,
+        Test = 0,
+        Alpha = 1,
+        Beta = 2,
+        Production = 3
+    }
+
+    public enum Platform
+    {
+      Android = 0,
+      IOS = 1,
+      Windows = 2,
+      Mac = 3,
+      Chromebook = 4,
+      IPhone = 5,
+      WinPhone = 6,
+      Linux = 7,
+      Ubuntu = 8,
+      Windows_Legacy = 9
     }
 }

@@ -156,7 +156,7 @@ namespace BuildTrackerApi.Controllers
         }
 
         [HttpPut("password/{id}")]
-        public async Task<IActionResult> ChangePassword(int id, [FromBody]string oldPassword, [FromBody]string newPassword)
+        public async Task<IActionResult> ChangePassword(int id, [FromForm]string oldPassword, [FromForm]string newPassword)
         {
             // map dto to entity and set id
             var user = _userService.GetById(id);
@@ -183,7 +183,7 @@ namespace BuildTrackerApi.Controllers
             }
         }
 
-        [Authorize("ADMIN, PROJECT_MANAGER, DEVELOPER")]
+        [Authorize(Roles = "ADMIN, PROJECT_MANAGER, DEVELOPER")]
         [HttpPut("role/{id}")]
         public IActionResult ChangeRole(int id, [FromBody] Role role)
         {

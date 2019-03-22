@@ -12,47 +12,46 @@ namespace BuildTrackerApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BuildsController : ControllerBase
+    public class TestsController : ControllerBase
     {
         private readonly BuildTrackerContext _context;
 
-        public BuildsController(BuildTrackerContext context)
+        public TestsController(BuildTrackerContext context)
         {
             _context = context;
         }
 
-        // GET: api/Builds
+        // GET: api/Tests
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Build>>> GetBuilds()
+        public async Task<ActionResult<IEnumerable<Test>>> GetTests()
         {
-            return await _context.Builds.ToListAsync();
+            return await _context.Tests.ToListAsync();
         }
 
-        // GET: api/Builds/5
+        // GET: api/Tests/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Build>> GetBuild(int id)
+        public async Task<ActionResult<Test>> GetTest(int id)
         {
-            var build = await _context.Builds.FindAsync(id);
+            var test = await _context.Tests.FindAsync(id);
 
-            if (build == null)
+            if (test == null)
             {
                 return NotFound();
             }
 
-            return build;
+            return test;
         }
 
-        // PUT: api/Builds/5
+        // PUT: api/Tests/5
         [HttpPut("{id}")]
-        [Authorize(Roles = "ADMIN, DEVELOPER")]
-        public async Task<IActionResult> PutBuild(int id, Build build)
+        public async Task<IActionResult> PutTest(int id, Test test)
         {
-            if (id != build.Id)
+            if (id != test.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(build).State = EntityState.Modified;
+            _context.Entry(test).State = EntityState.Modified;
 
             try
             {
@@ -60,7 +59,7 @@ namespace BuildTrackerApi.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!BuildExists(id))
+                if (!TestExists(id))
                 {
                     return NotFound();
                 }
@@ -73,36 +72,36 @@ namespace BuildTrackerApi.Controllers
             return NoContent();
         }
 
-        // POST: api/Builds
+        // POST: api/Tests
         [HttpPost]
-        public async Task<ActionResult<Build>> PostBuild(Build build)
+        public async Task<ActionResult<Test>> PostTest(Test test)
         {
-            _context.Builds.Add(build);
+            _context.Tests.Add(test);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetBuild", new { id = build.Id }, build);
+            return CreatedAtAction("GetTest", new { id = test.Id }, test);
         }
 
-        // DELETE: api/Builds/5
+        // DELETE: api/Tests/5
         [HttpDelete("{id}")]
         [Authorize(Roles = "ADMIN, DEVELOPER")]
-        public async Task<ActionResult<Build>> DeleteBuild(int id)
+        public async Task<ActionResult<Test>> DeleteTest(int id)
         {
-            var build = await _context.Builds.FindAsync(id);
-            if (build == null)
+            var test = await _context.Tests.FindAsync(id);
+            if (test == null)
             {
                 return NotFound();
             }
 
-            _context.Builds.Remove(build);
+            _context.Tests.Remove(test);
             await _context.SaveChangesAsync();
 
-            return build;
+            return test;
         }
 
-        private bool BuildExists(int id)
+        private bool TestExists(int id)
         {
-            return _context.Builds.Any(e => e.Id == id);
+            return _context.Tests.Any(e => e.Id == id);
         }
     }
 }

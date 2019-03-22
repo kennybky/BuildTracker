@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BuildTrackerApi.Migrations
 {
     [DbContext(typeof(BuildTrackerContext))]
-    [Migration("20190319215919_ModifyRoleRequirement2")]
-    partial class ModifyRoleRequirement2
+    [Migration("20190322155016_FreshCreate")]
+    partial class FreshCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -27,7 +27,7 @@ namespace BuildTrackerApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<DateTime>("BuildDate")
+                    b.Property<DateTime?>("BuildDate")
                         .ValueGeneratedOnAdd()
                         .HasDefaultValueSql("(getutcdate())");
 
@@ -36,7 +36,7 @@ namespace BuildTrackerApi.Migrations
 
                     b.Property<int>("BuildPersonId");
 
-                    b.Property<DateTime>("LastUpdate")
+                    b.Property<DateTime?>("LastUpdate")
                         .ValueGeneratedOnAdd()
                         .HasDefaultValueSql("(getutcdate())");
 
@@ -46,19 +46,22 @@ namespace BuildTrackerApi.Migrations
                     b.Property<string>("ProductName")
                         .IsRequired();
 
-                    b.Property<int>("Type");
+                    b.Property<string>("Type")
+                        .IsRequired();
 
                     b.Property<int>("UpdatePersonId");
 
-                    b.Property<string>("Version");
+                    b.Property<string>("Version")
+                        .IsRequired();
 
                     b.HasKey("Id");
 
                     b.HasIndex("BuildPersonId");
 
-                    b.HasIndex("ProductName");
-
                     b.HasIndex("UpdatePersonId");
+
+                    b.HasIndex("ProductName", "Version", "Platform")
+                        .IsUnique();
 
                     b.ToTable("Builds");
                 });
@@ -94,6 +97,38 @@ namespace BuildTrackerApi.Migrations
                     b.ToTable("ProductDevelopers");
                 });
 
+            modelBuilder.Entity("BuildTrackerApi.Models.Test", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("BuildId");
+
+                    b.Property<string>("Comments")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Platform")
+                        .IsRequired();
+
+                    b.Property<DateTime?>("TestDate")
+                        .ValueGeneratedOnAdd()
+                        .HasDefaultValueSql("(getutcdate())");
+
+                    b.Property<int>("TestPersonId");
+
+                    b.Property<string>("Type")
+                        .IsRequired();
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuildId");
+
+                    b.HasIndex("TestPersonId");
+
+                    b.ToTable("Tests");
+                });
+
             modelBuilder.Entity("BuildTrackerApi.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -127,9 +162,9 @@ namespace BuildTrackerApi.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed");
 
-                    b.Property<int?>("Role")
+                    b.Property<string>("Role")
                         .ValueGeneratedOnAdd()
-                        .HasDefaultValue(3);
+                        .HasDefaultValue("USER");
 
                     b.Property<string>("SecurityStamp");
 
@@ -177,6 +212,19 @@ namespace BuildTrackerApi.Migrations
                         .WithMany("ProductDevelopers")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("BuildTrackerApi.Models.Test", b =>
+                {
+                    b.HasOne("BuildTrackerApi.Models.Build", "Build")
+                        .WithMany("Tests")
+                        .HasForeignKey("BuildId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("BuildTrackerApi.Models.User", "TestPerson")
+                        .WithMany()
+                        .HasForeignKey("TestPersonId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 #pragma warning restore 612, 618
         }
