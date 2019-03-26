@@ -6,6 +6,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Migrations\20190322223538_ForeignKeyConfusion.cs" />
+    <Compile Remove="Migrations\20190322223538_ForeignKeyConfusion.Designer.cs" />
+    <Compile Remove="Migrations\20190326204551_CreateDto.cs" />
+    <Compile Remove="Migrations\20190326204551_CreateDto.Designer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="6.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />

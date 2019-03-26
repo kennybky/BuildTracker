@@ -1,4 +1,5 @@
 ﻿using BuildTrackerApi.Models;
+using BuildTrackerApi.Models.Dtos;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace BuildTrackerApi.Services
     {
         Task<User> Authenticate(string username, string password);
         IEnumerable<User> GetAll();
-        User GetById(int id);
+        User GetById(int? id);
 
         Task<User> GetByUserName(string UserName);
         Task<User> Create(User user, string password);
@@ -73,8 +74,12 @@ namespace BuildTrackerApi.Services
             return _context.Users;
         }
 
-        public User GetById(int id)
+        public User GetById(int? id)
         {
+            if(id== null)
+            {
+                return null;
+            }
             return _context.Users.Find(id);
         }
 

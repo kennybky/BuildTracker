@@ -16,6 +16,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using BuildTrackerApi.Models.Dtos;
 
 namespace BuildTrackerApi.Controllers
 {
@@ -33,8 +34,7 @@ namespace BuildTrackerApi.Controllers
             IUserService userService,
             IMapper mapper,
             IOptions<AppSettings> appSettings,
-            IAuthorizationService authorizationService,
-            UserManager<User> userManager)
+            IAuthorizationService authorizationService)
         {
             _userService = userService;
             _mapper = mapper;

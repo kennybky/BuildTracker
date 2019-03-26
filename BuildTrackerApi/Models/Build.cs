@@ -7,36 +7,42 @@ namespace BuildTrackerApi.Models
 {
     public partial class Build
     {
-
+        public Build()
+        {
+            Tests = new HashSet<Test>();
+        }
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Required]
-        public string Version { get; internal set; }
+        public string Version { get;  set; }
 
+        [Required]
         public string ProductName { get; set; }
-        [Required]
-        public virtual Product Product { get; internal set; }
+
+        [ForeignKey("ProductName")]
+        public virtual Product Product { get; set; }
        
-        public  DateTime? BuildDate { get; internal set; }
-        [Required]
-        public virtual User BuildPerson { get; internal set; }
+        public  DateTime? BuildDate { get; set; }
+
+
+        public virtual User BuildPerson { get; set; }
+
+
+        public virtual User UpdatePerson { get; set; }
+
+
+        public string BuildNumber { get;set; }
 
         [Required]
-        public virtual User UpdatePerson { get; internal set; }
-
-        [Required]
-        public string BuildNumber { get; internal set; }
-
-        [Required]
-        public Platform Platform { get; internal set; }
+        public Platform Platform { get;  set; }
 
        
         [Required]
-        public BuildType Type  { get; internal set; }
+        public BuildType Type  { get;  set; }
        
-        public DateTime? LastUpdate { get; internal set; }
+        public DateTime? LastUpdate { get; set; }
 
         public virtual ICollection<Test> Tests { get; set; }
     }

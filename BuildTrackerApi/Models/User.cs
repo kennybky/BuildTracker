@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.Serialization;
 
 namespace BuildTrackerApi.Models
 {
@@ -11,18 +12,31 @@ namespace BuildTrackerApi.Models
         public User()
         {
             ProductDevelopers = new HashSet<ProductDeveloper>();
+            Builds = new HashSet<Build>();
+            BuildUpdates = new HashSet<Build>();
+            Tests = new HashSet<Test>();
         }
 
         
-        public Role? Role { get; internal set; } 
 
-        public virtual ICollection<ProductDeveloper> ProductDevelopers { get; internal set; }
+
+        public Role? Role { get; set; } 
+
+        public virtual ICollection<ProductDeveloper> ProductDevelopers { get; set; }
 
         [PersonalData]
         public string FirstName { get; internal set; }
         [PersonalData]
         public string LastName { get; internal set; }
 
+        
+
+        [IgnoreDataMember]
+        public virtual ICollection<Build> Builds { get; set; }
+        [IgnoreDataMember]
+        public virtual ICollection<Test> Tests { get; set; }
+        [IgnoreDataMember]
+        public virtual ICollection<Build> BuildUpdates { get; set; }
     }
 
     

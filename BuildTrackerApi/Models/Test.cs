@@ -7,18 +7,19 @@ using System.Threading.Tasks;
 
 namespace BuildTrackerApi.Models
 {
-    public class Test
+    public partial class Test
     {
+
 
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Required]
-        public User TestPerson { get; set; }
+        public virtual User TestPerson { get; set; }
 
         [Required]
-        public Build Build { get; set; }
+        public virtual Build Build { get; set; }
 
         public string Comments { get; set; }
 
@@ -26,10 +27,10 @@ namespace BuildTrackerApi.Models
         public DateTime? TestDate { get; set; }
 
         [Required]
-        public Platform Platform { get; internal set; }
+        public Platform Platform { get; set; }
         
         [Required]
-        public TestType Type { get; internal set; }
+        public TestType Type { get; set; }
     }
 
     public enum TestType

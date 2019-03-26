@@ -13,8 +13,8 @@ namespace BuildTrackerApi.Models
         }
 
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; internal set; }
-        public string Name { get; internal set; }
+        public int Id { get; set; }
+        public string Name { get; set; }
 
         public virtual ICollection<Build> Builds { get; internal set; }
         public virtual ICollection<ProductDeveloper> ProductDevelopers { get; internal set; }

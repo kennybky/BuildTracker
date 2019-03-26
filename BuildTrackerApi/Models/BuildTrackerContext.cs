@@ -82,7 +82,7 @@ namespace BuildTrackerApi.Models
                 entity.Property(e => e.BuildDate).HasDefaultValueSql("(getutcdate())");
 
                 entity.Property(e => e.LastUpdate).HasDefaultValueSql("(getutcdate())");
-                entity.HasOne(e => e.Product).WithMany(p => p.Builds).HasPrincipalKey(e => e.Name).HasForeignKey(e => e.ProductName)
+                entity.HasOne(e => e.Product).WithMany(p => p.Builds).HasPrincipalKey(e => e.Name).HasForeignKey(e => e.ProductName).IsRequired()
                 .OnDelete(DeleteBehavior.Restrict);
 
                 entity.Property(e => e.Platform).HasConversion(PlatformConverter);
@@ -90,8 +90,8 @@ namespace BuildTrackerApi.Models
 
                 entity.HasIndex(e => new { e.ProductName, e.Version, e.Platform }).IsUnique();
 
-                entity.HasOne(e => e.BuildPerson).WithMany().OnDelete(DeleteBehavior.Restrict);
-                entity.HasOne(e => e.UpdatePerson).WithMany().OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.BuildPerson).WithMany(u => u.Builds).IsRequired().OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.UpdatePerson).WithMany(u => u.BuildUpdates).IsRequired().OnDelete(DeleteBehavior.Restrict);
 
 
             });
@@ -112,7 +112,7 @@ namespace BuildTrackerApi.Models
                 entity.Property(e => e.Platform).HasConversion(PlatformConverter);
                 entity.Property(e => e.Type).HasConversion(TestTypeConverter);
                 entity.HasOne(t => t.Build).WithMany(b => b.Tests).OnDelete(DeleteBehavior.Cascade);
-                entity.HasOne(t => t.TestPerson).WithMany().OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(t => t.TestPerson).WithMany(u=> u.Tests).IsRequired().OnDelete(DeleteBehavior.Restrict);
                 entity.Property(t => t.TestDate).HasDefaultValueSql("(getutcdate())");
 
                 entity.Property(t=> t.Comments).HasColumnType("text");

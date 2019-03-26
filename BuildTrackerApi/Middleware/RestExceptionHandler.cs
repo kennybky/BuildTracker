@@ -109,7 +109,7 @@ namespace BuildTrackerApi.Middleware
             else if (sqlEx.Number == SqlForeignKeyContraint)
             {
                 code = HttpStatusCode.Forbidden;
-                message = "You are not allowed to delete this resource.";
+                message = "There was a foreign key conflict.";
             }
 
             var result = JsonConvert.SerializeObject(new { error = message });

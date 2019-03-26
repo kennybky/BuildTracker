@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BuildTrackerApi.Models;
 using Microsoft.AspNetCore.Authorization;
+using BuildTrackerApi.Models.Dtos;
+using AutoMapper;
 
 namespace BuildTrackerApi.Controllers
 {
@@ -15,22 +17,25 @@ namespace BuildTrackerApi.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly BuildTrackerContext _context;
+        private readonly IMapper _mapper;
 
-        public ProductsController(BuildTrackerContext context)
+        public ProductsController(BuildTrackerContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         // GET: api/Products
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
+        public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
         {
-            return await _context.Products.ToListAsync();
+            var products = await _context.Products.ToListAsync();
+            return _mapper.Map<List<ProductDto>>(products);
         }
 
         // GET: api/Products/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Product>> GetProduct(int id)
+        public async Task<ActionResult<ProductDto>> GetProduct(int id)
         {
             var product = await _context.Products.FindAsync(id);
 
@@ -39,14 +44,16 @@ namespace BuildTrackerApi.Controllers
                 return NotFound();
             }
 
-            return product;
+            return _mapper.Map<ProductDto>(product);
         }
 
         // PUT: api/Products/5
         [HttpPut("{id}")]
         [Authorize(Roles = "ADMIN, PROJECT_MANAGER")]
-        public async Task<IActionResult> PutProduct(int id, Product product)
+        public async Task<IActionResult> PutProduct(int id, ProductDto productDto)
         {
+            var product = _mapper.Map<Product>(productDto);
+
             if (id != product.Id)
             {
                 return BadRequest();
@@ -76,18 +83,21 @@ namespace BuildTrackerApi.Controllers
         // POST: api/Products
         [HttpPost]
         [Authorize(Roles = "ADMIN, PROJECT_MANAGER")]
-        public async Task<ActionResult<Product>> PostProduct(Product product)
+        public async Task<ActionResult<ProductDto>> PostProduct(ProductDto productDto)
         {
+            var product = _mapper.Map<Product>(productDto);
+
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetProduct", new { id = product.Id }, product);
+            productDto = _mapper.Map<ProductDto>(product);
+            return CreatedAtAction("GetProduct", new { id = product.Id }, productDto);
         }
 
         // DELETE: api/Products/5
         [Authorize(Roles = "ADMIN")]
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Product>> DeleteProduct(int id)
+        public async Task<ActionResult<ProductDto>> DeleteProduct(int id)
         {
             var product = await _context.Products.FindAsync(id);
             if (product == null)
@@ -98,7 +108,7 @@ namespace BuildTrackerApi.Controllers
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
 
-            return product;
+            return _mapper.Map<ProductDto>(product);
         }
 
         private bool ProductExists(int id)

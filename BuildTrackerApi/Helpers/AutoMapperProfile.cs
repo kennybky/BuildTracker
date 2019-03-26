@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BuildTrackerApi.Models;
+using BuildTrackerApi.Models.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,19 @@ namespace BuildTrackerApi.Helpers
         {
             CreateMap<User, UserDto>();
             CreateMap<UserDto, User>();
+
+            CreateMap<BuildDto, Build>();
+            CreateMap<Build, BuildDto>();
+
+            CreateMap<TestDto, Test>();
+            CreateMap<Test, TestDto>();
+
+            CreateMap<ProductDto, Product>();
+            CreateMap<Product, ProductDto>();
+
+            CreateMap<ProductDeveloperDto, ProductDeveloper>();
+            CreateMap<ProductDeveloper, ProductDeveloperDto>();
+
         }
     }
 }

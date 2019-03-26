@@ -1,11 +1,13 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace BuildTrackerApi.Models
+namespace BuildTrackerApi.Models.Dtos
 {
-    public class UserDto
+    public partial class UserDto
     {
         public int Id { get; set; }
         public string FirstName { get; set; }
@@ -17,6 +19,7 @@ namespace BuildTrackerApi.Models
 
         public string PhoneNumber { get; set; }
 
+        [JsonConverter(typeof(StringEnumConverter))]
         public Role? Role { get; set; }
     }
 }

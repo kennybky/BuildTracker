@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BuildTrackerApi.Models;
 using Microsoft.AspNetCore.Authorization;
+using BuildTrackerApi.Models.Dtos;
+using AutoMapper;
 
 namespace BuildTrackerApi.Controllers
 {
@@ -15,22 +17,25 @@ namespace BuildTrackerApi.Controllers
     public class ProductDevelopersController : ControllerBase
     {
         private readonly BuildTrackerContext _context;
+        private IMapper _mapper;
 
-        public ProductDevelopersController(BuildTrackerContext context)
+        public ProductDevelopersController(BuildTrackerContext context, IMapper mapper)
         {
             _context = context;
+            _mapper =  mapper;
         }
 
         // GET: api/ProductDevelopers
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductDeveloper>>> GetProductDevelopers()
+        public async Task<ActionResult<IEnumerable<ProductDeveloperDto>>> GetProductDevelopers()
         {
-            return await _context.ProductDevelopers.Include(c=> c.Developer).Include(d=> d.Product).ToListAsync();
+            var pdos =  await _context.ProductDevelopers.Include(c=> c.Developer).Include(d=> d.Product).ToListAsync();
+            return _mapper.Map<List<ProductDeveloperDto>>(pdos);
         }
 
         // GET: api/ProductDevelopers/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<ProductDeveloper>> GetProductDeveloper(int id)
+        public async Task<ActionResult<ProductDeveloperDto>> GetProductDeveloper(int id)
         {
             var productDeveloper = await _context.ProductDevelopers.FindAsync(id);
 
@@ -39,14 +44,16 @@ namespace BuildTrackerApi.Controllers
                 return NotFound();
             }
 
-            return productDeveloper;
+            return _mapper.Map<ProductDeveloperDto>(productDeveloper);
         }
 
         // PUT: api/ProductDevelopers/5
         [HttpPut("{id}")]
         [Authorize(Roles = "ADMIN, PROJECT_MANAGER")]
-        public async Task<IActionResult> PutProductDeveloper(int id, ProductDeveloper productDeveloper)
+        public async Task<IActionResult> PutProductDeveloper(int id, ProductDeveloperDto productDeveloperDto)
         {
+            var productDeveloper = _mapper.Map<ProductDeveloper>(productDeveloperDto);
+
             if (id != productDeveloper.ProductId)
             {
                 return BadRequest();
@@ -76,8 +83,11 @@ namespace BuildTrackerApi.Controllers
         // POST: api/ProductDevelopers
         [HttpPost]
         [Authorize(Roles = "ADMIN, PROJECT_MANAGER")]
-        public async Task<ActionResult<ProductDeveloper>> PostProductDeveloper(ProductDeveloper productDeveloper)
+        public async Task<ActionResult<ProductDeveloper>> PostProductDeveloper(ProductDeveloperDto productDeveloperDto)
         {
+
+            var productDeveloper = _mapper.Map<ProductDeveloper>(productDeveloperDto);
+
             _context.ProductDevelopers.Add(productDeveloper);
             try
             {
@@ -95,13 +105,15 @@ namespace BuildTrackerApi.Controllers
                 }
             }
 
-            return CreatedAtAction("GetProductDeveloper", new { id = productDeveloper.ProductId }, productDeveloper);
+            productDeveloperDto = _mapper.Map<ProductDeveloperDto>(productDeveloper);
+
+            return CreatedAtAction("GetProductDeveloper", new { id = productDeveloper.ProductId }, productDeveloperDto);
         }
 
         // DELETE: api/ProductDevelopers/5
         [HttpDelete("{id}")]
         [Authorize(Roles = "ADMIN, PROJECT_MANAGER")]
-        public async Task<ActionResult<ProductDeveloper>> DeleteProductDeveloper(int id)
+        public async Task<ActionResult<ProductDeveloperDto>> DeleteProductDeveloper(int id)
         {
             var productDeveloper = await _context.ProductDevelopers.FindAsync(id);
             if (productDeveloper == null)
@@ -112,7 +124,7 @@ namespace BuildTrackerApi.Controllers
             _context.ProductDevelopers.Remove(productDeveloper);
             await _context.SaveChangesAsync();
 
-            return productDeveloper;
+            return _mapper.Map<ProductDeveloperDto>(productDeveloper);
         }
 
         private bool ProductDeveloperExists(int id)
