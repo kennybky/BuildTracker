@@ -17,11 +17,13 @@ namespace BuildTrackerApi.Services
 
         Task<User> GetByUserName(string UserName);
         Task<User> Create(User user, string password);
-        void Update(User user, string password = null);
-        void Delete(int id);
-        void ChangeRole(User userParam, Role role);
+        Task<User> Update(User user);
+        User Delete(int id);
+        Task<User> ChangeRole(User userParam, Role role);
 
         Task<bool> ChangePassword(User userParam, string oldPassword, string newPassword);
+
+        Task ConfirmAccount(User user, string password);
     }
 
     public class UserService : IUserService
@@ -122,7 +124,7 @@ namespace BuildTrackerApi.Services
             }
         }
 
-        public void Update(User userParam, string password = null)
+        public async Task<User> Update(User userParam)
         {
             var user = _context.Users.Find(userParam.Id);
 
@@ -143,21 +145,46 @@ namespace BuildTrackerApi.Services
             user.Email = userParam.Email;
             user.PhoneNumber = userParam.PhoneNumber;
 
-            
-            _userManager.UpdateAsync(user).Wait();
-          
+
+            await _userManager.UpdateAsync(user);
+            return user;
         }
 
-        public void ChangeRole(User userParam, Role role)
+        public async Task ConfirmAccount(User user, string password)
         {
-            var user = _context.Users.Find(userParam.Id);
 
             if (user == null)
                 throw new AppException("User not found");
 
+            else if(user.AccountConfirmed)
+                throw new AppException("Account Already Confirmed", HttpStatusCode.Forbidden);
+
+
+            string token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            var result = await _userManager.ResetPasswordAsync(user, token, password);
+
+            if (result.Succeeded) {
+              user.AccountConfirmed = true;
+                result = await _userManager.UpdateAsync(user);
+            }
+            if (!result.Succeeded)
+            {
+                throw new AppException("There was an error completing this request", HttpStatusCode.BadRequest);
+            }
+        }
+
+        public async Task<User> ChangeRole(User userParam, Role role)
+        {
+            var user = _context.Users.Find(userParam.Id);
+
+            if (user == null)
+                throw new AppException("User not found", HttpStatusCode.NotFound);
+
             user.Role = role;
 
-            _userManager.UpdateAsync(user).Wait();
+            await _userManager.UpdateAsync(user);
+            return user;
         }
 
         public async Task<bool> ChangePassword(User userParam, string oldPassword, string newPassword)
@@ -178,7 +205,7 @@ namespace BuildTrackerApi.Services
 
        
 
-        public void Delete(int id)
+        public User Delete(int id)
         {
             var user = _context.Users.Find(id);
             if (user != null)
@@ -186,6 +213,7 @@ namespace BuildTrackerApi.Services
                 _context.Users.Remove(user);
                 _context.SaveChanges();
             }
+            return user;
         }
 
         // private helper methods

@@ -65,7 +65,7 @@ namespace BuildTrackerApi.Models
 
                 entity.Property(e => e.Role).HasDefaultValue(Role.USER);
 
-               
+                entity.Property(e => e.AccountConfirmed).HasDefaultValue(false).IsRequired();
 
             });
 

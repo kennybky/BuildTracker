@@ -29,6 +29,10 @@ namespace BuildTrackerApi.Models
         [PersonalData]
         public string LastName { get; internal set; }
 
+        public bool AccountConfirmed { get; internal set; }
+
+        
+
         
 
         [IgnoreDataMember]

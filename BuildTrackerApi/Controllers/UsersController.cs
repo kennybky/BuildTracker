@@ -21,6 +21,7 @@ using BuildTrackerApi.Models.Dtos;
 namespace BuildTrackerApi.Controllers
 {
     [Authorize]
+    [DenyNotConfirmed]
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
@@ -58,7 +59,8 @@ namespace BuildTrackerApi.Controllers
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.Name, user.Id.ToString()),
-                    new Claim(ClaimTypes.Role, user.Role.ToString())
+                    new Claim(ClaimTypes.Role, user.Role.ToString()),
+                    new Claim("AccountConfirmed", user.AccountConfirmed.ToString())
                 }),
                 Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -96,22 +98,13 @@ namespace BuildTrackerApi.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-
+        [AllowNotConfirmed]
         [HttpGet("self")]
         public IActionResult Self()
         {
             var id = int.Parse(HttpContext.User.Identity.Name);
             var user = _userService.GetById(id);
-            return Ok(new
-            {
-                user.Id,
-                user.UserName,
-                user.FirstName,
-                user.LastName,
-                user.Email,
-                user.PhoneNumber,
-                user.Role
-            });
+            return Ok(_mapper.Map<UserDto>(user));
         }
 
         [HttpGet]
@@ -145,7 +138,7 @@ namespace BuildTrackerApi.Controllers
             try
             {
                 // save 
-                _userService.Update(user, userDto.Password);
+               await  _userService.Update(user);
                 return Ok();
             }
             catch (AppException ex)
@@ -158,7 +151,7 @@ namespace BuildTrackerApi.Controllers
         [HttpPut("password/{id}")]
         public async Task<IActionResult> ChangePassword(int id, [FromForm]string oldPassword, [FromForm]string newPassword)
         {
-            // map dto to entity and set id
+           
             var user = _userService.GetById(id);
             if(user == null)
             {
@@ -174,6 +167,33 @@ namespace BuildTrackerApi.Controllers
             {
                 // save 
                await _userService.ChangePassword(user, oldPassword, newPassword);
+                return Ok();
+            }
+            catch (AppException ex)
+            {
+                // return error message if there was an exception
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [AllowNotConfirmed]
+        [HttpPut("confirm/{id}")]
+        public async Task<IActionResult> ConfirmAccount(int id, [FromBody]UserDto userDto)
+        {
+           
+            // map dto to entity and set id
+            var user = _mapper.Map<User>(userDto);
+            user.Id = id;
+            var allowed = await _authorizationService.AuthorizeAsync(HttpContext.User, user, Operations.Update);
+            if (!allowed.Succeeded)
+            {
+                return Forbid();
+            }
+            try
+            {
+                // Update and track 
+               user = await _userService.Update(user);
+               await _userService.ConfirmAccount(user, userDto.Password);
                 return Ok();
             }
             catch (AppException ex)

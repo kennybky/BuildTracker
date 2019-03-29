@@ -19,7 +19,9 @@ namespace BuildTrackerApi.Models.Dtos
 
         public string PhoneNumber { get; set; }
 
+        public bool AccountConfirmed { get; internal set; }
+
         [JsonConverter(typeof(StringEnumConverter))]
-        public Role? Role { get; set; }
+        public Role? Role { get; internal set; }
     }
 }

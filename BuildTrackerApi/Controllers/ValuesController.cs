@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BuildTrackerApi.Helpers;
 using BuildTrackerApi.Models;
+using BuildTrackerApi.Services.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,8 +25,20 @@ namespace BuildTrackerApi.Controllers
         [HttpGet("{id}")]
         public ActionResult<string> Get(int id)
         {
-            var user = HttpContext.User;
-            var roles = user.IsInRole(Role.USER.ToString());
+            return "value";
+        }
+
+        [HttpGet("test")]
+        public ActionResult<string> Test()
+        {
+            return "value";
+        }
+
+        [HttpGet("test2")]
+        [Authorize(Roles = "ADMIN, DEVELOPER")]
+        [AllowNotConfirmed]
+        public ActionResult<string> Test2()
+        {
             return "value";
         }
 

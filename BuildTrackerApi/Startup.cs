@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -38,10 +39,12 @@ namespace BuildTrackerApi
         {
             services.AddCors();
             services.AddDbContext<BuildTrackerContext>();
+
+
             services.AddMvc()
-        .AddJsonOptions(
-            options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
-        ).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+                .AddJsonOptions(options =>
+                options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore)
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             services.AddAutoMapper();
 
@@ -52,6 +55,7 @@ namespace BuildTrackerApi
             // configure jwt authentication
             var appSettings = appSettingsSection.Get<AppSettings>();
             var key = Encoding.ASCII.GetBytes(appSettings.Secret);
+           
             services.AddAuthentication(x =>
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -69,10 +73,11 @@ namespace BuildTrackerApi
                         if (user == null)
                         {
                             // return unauthorized if user no longer exists
-                            context.Fail("Unauthorized");
+                            context.Fail("User No Longer Exists");
                         }
                         return Task.CompletedTask;
                     }
+
                 };
                 x.RequireHttpsMetadata = false;
                 x.SaveToken = true;
@@ -85,13 +90,22 @@ namespace BuildTrackerApi
                 };
             });
 
+           
+
+            
+
             services.AddDefaultIdentity<User>()
         .AddEntityFrameworkStores<BuildTrackerContext>();
 
             // configure DI for application services
             services.AddScoped<IUserService, UserService>();
+
+
+
+
             services.AddScoped<IAuthorizationHandler, UserAuthorizationHandler>();
 
+      
 
 
             services.Configure<IdentityOptions>(options =>
@@ -103,7 +117,7 @@ namespace BuildTrackerApi
                 options.Password.RequireUppercase = true;
                 options.Password.RequiredLength = 6;
                 options.Password.RequiredUniqueChars = 1;
-
+                options.Tokens.PasswordResetTokenProvider = TokenOptions.DefaultProvider;
 
                 // Default Lockout settings.
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
@@ -129,12 +143,23 @@ namespace BuildTrackerApi
               .AllowAnyMethod()
               .AllowAnyHeader());
 
+
+
+
             app.UseAuthentication();
 
-            
-            //app.UseMiddleware<JWTAuthentication>();
 
-            app.UseMiddleware<RestExceptionHander>();
+
+            app.UseMiddleware<RestExceptionHandler>();
+
+            //app.UseWhen(context => context.User.Identity.IsAuthenticated &&
+            //!context.Request.Path.StartsWithSegments("/Users"), appBuilder =>
+            //{
+            //    appBuilder.UseMiddleware<AccountConfirmationHandler>();
+            //});
+
+
+                
 
             app.UseHttpsRedirection();
             app.UseMvc();

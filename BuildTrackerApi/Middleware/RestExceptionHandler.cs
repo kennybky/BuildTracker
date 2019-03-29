@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace BuildTrackerApi.Middleware
 {
-    public class RestExceptionHander
+    public class RestExceptionHandler
     {
         private readonly RequestDelegate next;
 
@@ -21,7 +21,7 @@ namespace BuildTrackerApi.Middleware
 
         public const int SqlForeignKeyContraint = 547;
 
-        public RestExceptionHander(RequestDelegate next)
+        public RestExceptionHandler(RequestDelegate next)
         {
             this.next = next;
         }
@@ -42,8 +42,7 @@ namespace BuildTrackerApi.Middleware
             }
             catch (DbUpdateException dbUpdateEx)
             {
-                var sqlEx = dbUpdateEx?.InnerException as SqlException;
-                if (sqlEx != null)
+                if (dbUpdateEx?.InnerException is SqlException sqlEx)
                 {
                     await HandleSqlExceptionAsync(context, sqlEx);
                 }

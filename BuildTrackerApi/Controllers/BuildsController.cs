@@ -10,9 +10,12 @@ using Microsoft.AspNetCore.Authorization;
 using BuildTrackerApi.Services;
 using BuildTrackerApi.Models.Dtos;
 using AutoMapper;
+using BuildTrackerApi.Services.Authorization;
 
 namespace BuildTrackerApi.Controllers
 {
+    [Authorize]
+    [DenyNotConfirmed]
     [Route("api/[controller]")]
     [ApiController]
     public class BuildsController : ControllerBase
