@@ -22,6 +22,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace BuildTrackerApi
 {
@@ -124,6 +125,11 @@ namespace BuildTrackerApi
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.AllowedForNewUsers = true;
             });
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Info() { Title = "Build Tracker API", Version = "v1" });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -152,19 +158,15 @@ namespace BuildTrackerApi
 
             app.UseMiddleware<RestExceptionHandler>();
 
-            //app.UseWhen(context => context.User.Identity.IsAuthenticated &&
-            //!context.Request.Path.StartsWithSegments("/Users"), appBuilder =>
-            //{
-            //    appBuilder.UseMiddleware<AccountConfirmationHandler>();
-            //});
-
-
-                
+            app.UseStaticFiles();
 
             app.UseHttpsRedirection();
             app.UseMvc();
 
             AddSampleData(serviceProvider).Wait();
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("v1/swagger.json", "Build Tracker API v1"));
         }
 
         public async Task AddSampleData(IServiceProvider serviceProvider)

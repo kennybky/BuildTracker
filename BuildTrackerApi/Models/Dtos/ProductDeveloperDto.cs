@@ -1,8 +1,12 @@
-﻿namespace BuildTrackerApi.Models.Dtos
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace BuildTrackerApi.Models.Dtos
 {
     public partial class ProductDeveloperDto
     {
+        [Required]
         public int ProductId { get; set; }
+        [Required]
         public int DeveloperId { get; set; }
 
         

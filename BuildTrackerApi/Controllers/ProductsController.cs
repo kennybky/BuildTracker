@@ -31,6 +31,7 @@ namespace BuildTrackerApi.Controllers
 
         // GET: api/Products
         [HttpGet]
+        [AllowNotConfirmed]
         public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
         {
             var products = await _context.Products.ToListAsync();
@@ -39,6 +40,7 @@ namespace BuildTrackerApi.Controllers
 
         // GET: api/Products/5
         [HttpGet("{id}")]
+        [AllowNotConfirmed]
         public async Task<ActionResult<ProductDto>> GetProduct(int id)
         {
             var product = await _context.Products.FindAsync(id);

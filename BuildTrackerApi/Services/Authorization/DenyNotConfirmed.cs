@@ -1,10 +1,13 @@
 ﻿
 using BuildTrackerApi.Models;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,7 +45,13 @@ namespace BuildTrackerApi.Services.Authorization
                         }
                         else if (!user.AccountConfirmed)
                         {
-                            context.Result = new ForbidResult();
+                            var dic = new Dictionary<string, string>();
+                            dic.Add("Reason", "Account not Confirmes");
+                            dic.Add("AuthUrl", "api/users/confirm/" + user.Id);
+                            AuthenticationProperties props = new AuthenticationProperties(dic);
+                            var result = JsonConvert.SerializeObject(new { error = "Account not confirmed" });
+                            await context.HttpContext.Response.WriteAsync(result);
+                            context.Result = new ForbidResult(props);
                             return;
                         }
                     }

@@ -11,6 +11,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BuildTrackerApi.Services.Authorization
 {
+    //
+    // Summary:
+    //     Specifies that the class or method that this attribute is applied to
+    // allows users to access API without confirming account
     public class AllowNotConfirmed : Attribute, IAsyncAuthorizationFilter
     {
         public Task OnAuthorizationAsync(AuthorizationFilterContext context)
@@ -21,5 +25,7 @@ namespace BuildTrackerApi.Services.Authorization
             }
             return Task.CompletedTask;
         }
+
+       
     }
 }
