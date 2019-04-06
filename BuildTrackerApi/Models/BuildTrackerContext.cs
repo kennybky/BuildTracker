@@ -27,7 +27,7 @@ namespace BuildTrackerApi.Models
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("Server=MAPI-AKTOGUNL;Database=BuildTracker;Trusted_Connection=True;");
+                optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=BuildTracker;Trusted_Connection=True;");
             }
         }
 
