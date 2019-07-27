@@ -1,7 +1,10 @@
 ﻿using System;
+using System.IO;
+using BuildTrackerApi.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.Extensions.Configuration;
 
 namespace BuildTrackerApi.Models
 {
@@ -25,9 +28,16 @@ namespace BuildTrackerApi.Models
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            base.OnConfiguring(optionsBuilder);
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=BuildTracker;Trusted_Connection=True;");
+                IConfigurationRoot configuration = new ConfigurationBuilder()
+                   .SetBasePath(Directory.GetCurrentDirectory())
+                   .AddJsonFile("appsettings.json")
+                   .Build();
+                var appSettingsSection = configuration.GetSection("AppSettings");
+                var appSettings = appSettingsSection.Get<AppSettings>();
+                optionsBuilder.UseSqlServer(appSettings.ConnectionString);
             }
         }
 

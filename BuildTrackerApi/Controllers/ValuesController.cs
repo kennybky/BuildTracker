@@ -7,13 +7,25 @@ using BuildTrackerApi.Models;
 using BuildTrackerApi.Services.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace BuildTrackerApi.Controllers
 {
+   
+
     [Route("api/[controller]")]
     [ApiController]
     public class ValuesController : ControllerBase
     {
+        private readonly AppSettings _appSettings;
+        private readonly BuildTrackerContext _context;
+
+        public ValuesController(BuildTrackerContext context, IOptions<AppSettings> appSettings)
+        {
+            _appSettings = appSettings.Value;
+            _context = context;
+        }
         // GET api/values
         [HttpGet]
         public ActionResult<IEnumerable<string>> Get()
@@ -31,7 +43,7 @@ namespace BuildTrackerApi.Controllers
         [HttpGet("test")]
         public ActionResult<string> Test()
         {
-            return "value";
+            return _appSettings.ConnectionString;
         }
 
         [HttpGet("test2")]
@@ -44,8 +56,10 @@ namespace BuildTrackerApi.Controllers
 
         // POST api/values
         [HttpPost]
-        public void Post([FromBody] string value)
+        public async Task<IActionResult> Post([FromBody] string value)
         {
+            var data = await _context.Builds.Include(b => b.Product).ToListAsync();
+            return null;
         }
 
         // PUT api/values/5

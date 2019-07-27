@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -91,12 +92,13 @@ namespace BuildTrackerApi
                 };
             });
 
-           
-
-            
-
             services.AddDefaultIdentity<User>()
-        .AddEntityFrameworkStores<BuildTrackerContext>();
+       .AddEntityFrameworkStores<BuildTrackerContext>();
+
+            services.AddDbContext<BuildTrackerContext>(options =>
+        options.UseSqlServer(appSettings.ConnectionString));
+
+           
 
             // configure DI for application services
             services.AddScoped<IUserService, UserService>();
@@ -158,10 +160,16 @@ namespace BuildTrackerApi
 
             app.UseMiddleware<RestExceptionHandler>();
 
+            app.UseDefaultFiles();
+
             app.UseStaticFiles();
 
-            app.UseHttpsRedirection();
-            app.UseMvc();
+            //app.UseHttpsRedirection();
+            app.UseMvc(routes=>
+            {
+                routes.MapSpaFallbackRoute()
+            });
+            
 
             AddSampleData(serviceProvider).Wait();
 
@@ -178,7 +186,8 @@ namespace BuildTrackerApi
                 LastName = "Doe",
                 Role = Role.ADMIN,
                 Email = "johndoe@email.com",
-                LockoutEnabled = true
+                LockoutEnabled = true,
+                AccountConfirmed = true
             };
             var userService = serviceProvider.GetRequiredService<IUserService>();
             try
