@@ -1,10 +1,14 @@
-﻿using BuildTrackerApi.Models;
+﻿using BuildTrackerApi.Helpers;
+using BuildTrackerApi.Models;
 using BuildTrackerApi.Models.Dtos;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace BuildTrackerApi.Services
@@ -12,6 +16,8 @@ namespace BuildTrackerApi.Services
     public interface IUserService
     {
         Task<User> Authenticate(string username, string password);
+
+        Task<IEnumerable<Claim>> GetUserClaims(User user);
         IEnumerable<User> GetAll();
         User GetById(int? id);
 
@@ -19,8 +25,11 @@ namespace BuildTrackerApi.Services
         Task<User> Create(User user, string password);
         Task<User> Update(User user);
         User Delete(int id);
-        Task<User> ChangeRole(User userParam, Role role);
+        Task<User> AddRole(User userParam, Role role);
 
+        Task<bool> IsInRole(User user, Role role);
+
+     
         Task<bool> ChangePassword(User userParam, string oldPassword, string newPassword);
 
         Task ConfirmAccount(User user, string password);
@@ -30,11 +39,12 @@ namespace BuildTrackerApi.Services
     {
         private BuildTrackerContext _context;
         private readonly UserManager<User> _userManager;
-
-        public UserService(BuildTrackerContext context, UserManager<User> userManager)
+        private readonly RoleManager<AppRole> _roleManager;
+        public UserService(BuildTrackerContext context, UserManager<User> userManager, RoleManager<AppRole> roleManager)
         {
             _context = context;
             _userManager = userManager;
+            _roleManager = roleManager;
         }
 
         public async Task<User> Authenticate(string username, string password)
@@ -71,9 +81,45 @@ namespace BuildTrackerApi.Services
             // authentication successful
         }
 
+        Task<bool> IUserService.IsInRole(User user, Role role)
+        {
+            return _userManager.IsInRoleAsync(user, role.ToString());
+        }
+
         public IEnumerable<User> GetAll()
         {
             return _context.Users;
+        }
+
+        async Task<IEnumerable<Claim>> IUserService.GetUserClaims(User user)
+        {
+            IList<Claim> claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.Id.ToString()),
+                new Claim(ClaimTypes.GivenName, user.FirstName),
+                new Claim(ClaimTypes.Surname, user.LastName)
+            };
+            IList<Claim> userClaims = await _userManager.GetClaimsAsync(user);
+            foreach (var claim in userClaims)
+            {
+                claims.Add(claim);
+            }
+            IEnumerable<string> userRoles = await _userManager.GetRolesAsync(user);
+            bool supportsRoleClaim = _roleManager.SupportsRoleClaims;
+            foreach (var role in userRoles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+                if (supportsRoleClaim)
+                {
+                    IList<Claim> roleClaims = await _roleManager.GetClaimsAsync(new AppRole(role));
+                    foreach (var claim in roleClaims)
+                    {
+                        claims.Add(claim);
+                    }
+                }
+            }
+            claims.Add(new Claim(CustomClaimTypes.AccountConfirmed, user.AccountConfirmed.ToString()));
+            return claims;
         }
 
         public User GetById(int? id)
@@ -174,14 +220,23 @@ namespace BuildTrackerApi.Services
             }
         }
 
-        public async Task<User> ChangeRole(User userParam, Role role)
+
+        public async Task<User> AddRole(User userParam, Role role)
         {
             var user = _context.Users.Find(userParam.Id);
 
             if (user == null)
                 throw new AppException("User not found", HttpStatusCode.NotFound);
 
-            user.Role = role;
+
+            var result = await _userManager.AddToRoleAsync(user, role.ToString());
+
+            if (!result.Succeeded)
+            {
+                throw new AppException("Can't update Role");
+            }
+            //TODO: implement role
+            //user.Role = role;
 
             await _userManager.UpdateAsync(user);
             return user;
@@ -249,6 +304,5 @@ namespace BuildTrackerApi.Services
             return true;
         }
 
-      
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using BuildTrackerApi.Helpers;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -8,7 +10,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace BuildTrackerApi.Models
 {
-    public partial class BuildTrackerContext : DbContext
+    public partial class BuildTrackerContext : IdentityDbContext<User, AppRole, int>
     {
         public BuildTrackerContext()
         {
@@ -22,7 +24,7 @@ namespace BuildTrackerApi.Models
         public virtual DbSet<Build> Builds { get; set; }
         public virtual DbSet<ProductDeveloper> ProductDevelopers { get; set; }
         public virtual DbSet<Product> Products { get; set; }
-        public virtual DbSet<User> Users { get; set; }
+        //public virtual DbSet<User> Users { get; set; }
 
         public virtual DbSet<Test> Tests { get; set; }
 
@@ -71,9 +73,11 @@ namespace BuildTrackerApi.Models
                 entity.Property(e => e.PasswordHash)
                     .IsRequired();
 
-                entity.Property(e => e.Role).HasConversion(RoleConverter);
+               
 
-                entity.Property(e => e.Role).HasDefaultValue(Role.USER);
+                //entity.Property(e => e.Role).HasConversion(RoleConverter);
+
+                //entity.Property(e => e.Role).HasDefaultValue(Role.USER);
 
                 entity.Property(e => e.AccountConfirmed).HasDefaultValue(false).IsRequired();
 
@@ -126,6 +130,25 @@ namespace BuildTrackerApi.Models
                 entity.Property(t => t.TestDate).HasDefaultValueSql("(getutcdate())");
 
                 entity.Property(t=> t.Comments).HasColumnType("text");
+            });
+
+          
+
+            modelBuilder.Entity<IdentityUserLogin<int>>(b =>
+            {
+                b.HasKey(l => new { l.LoginProvider, l.ProviderKey, l.UserId });
+                b.ToTable("UserLogins");
+            });
+            modelBuilder.Entity<IdentityUserRole<int>>(entity =>
+            {
+                entity.HasKey(e => new { e.UserId, e.RoleId });
+                entity.ToTable("UserRole");
+            });
+
+            modelBuilder.Entity<IdentityUserToken<int>>(entity =>
+            {
+                entity.HasKey(e => new { e.UserId, e.LoginProvider, e.Name});
+                entity.ToTable("UserToken");
             });
         }
     }

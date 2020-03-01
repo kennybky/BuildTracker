@@ -21,7 +21,6 @@ namespace BuildTrackerApi.Models.Dtos
 
         public bool AccountConfirmed { get; internal set; }
 
-        [JsonConverter(typeof(StringEnumConverter))]
-        public Role? Role { get; internal set; }
+       
     }
 }

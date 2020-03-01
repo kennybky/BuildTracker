@@ -40,14 +40,14 @@ namespace BuildTrackerApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<TestDto>> GetTest(int id)
         {
-            var test = await _context.Tests.Include(t => t.TestPerson).Include(t => t.Build).FirstOrDefaultAsync(t=> t.Id == id);
-
-            if (test == null)
+            if (TestExists(id))
             {
-                return NotFound();
+                var test = await _context.FindAsync<Test>(id);
+                return _mapper.Map<TestDto>(test);
+            } else
+            {
+                return NotFound(new { message = "Test does not exist" });
             }
-
-            return _mapper.Map<TestDto>(test);
         }
 
         // PUT: api/Tests/5
@@ -113,7 +113,7 @@ namespace BuildTrackerApi.Controllers
             User person = await _context.FindAsync<User>(test.TestPerson?.Id);
             if (person == null)
             {
-                return NotFound(new { message = "Invalid Build" });
+                return NotFound(new { message = "Invalid User" });
             }
 
             test.TestPerson = person;

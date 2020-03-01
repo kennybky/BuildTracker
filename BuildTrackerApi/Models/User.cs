@@ -19,9 +19,6 @@ namespace BuildTrackerApi.Models
 
         
 
-
-        public Role? Role { get; set; } 
-
         public virtual ICollection<ProductDeveloper> ProductDevelopers { get; set; }
 
         [PersonalData]

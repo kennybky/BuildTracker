@@ -1,4 +1,5 @@
 ﻿
+using BuildTrackerApi.Helpers;
 using BuildTrackerApi.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -20,7 +21,7 @@ namespace BuildTrackerApi.Services.Authorization
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
             
-            if (!context.Filters.Any(item => item is AllowNotConfirmed || item is AllowAnonymousFilter))
+            if (!context.ActionDescriptor.EndpointMetadata.Any(item => item is AllowNotConfirmed || item is AllowAnonymousFilter || item is IAllowAnonymous))
             {
             if (!context.HttpContext.User.Identity.IsAuthenticated)
             {
@@ -29,7 +30,7 @@ namespace BuildTrackerApi.Services.Authorization
             }
             try
             {
-                  var confirmed =  context.HttpContext.User.HasClaim("AccountConfirmed", true.ToString());
+                  var confirmed =  context.HttpContext.User.HasClaim(CustomClaimTypes.AccountConfirmed, true.ToString());
 
                     //Make a call to database to ensure Consistency
                     if (!confirmed)
@@ -45,9 +46,11 @@ namespace BuildTrackerApi.Services.Authorization
                         }
                         else if (!user.AccountConfirmed)
                         {
-                            var dic = new Dictionary<string, string>();
-                            dic.Add("Reason", "Account not Confirmes");
-                            dic.Add("AuthUrl", "api/users/confirm/" + user.Id);
+                            var dic = new Dictionary<string, string>
+                            {
+                                { "Reason", "Account not Confirmed" },
+                                { "AuthUrl", "api/users/confirm/" + user.Id }
+                            };
                             AuthenticationProperties props = new AuthenticationProperties(dic);
                             var result = JsonConvert.SerializeObject(new { error = "Account not confirmed" });
                             await context.HttpContext.Response.WriteAsync(result);

@@ -4,14 +4,16 @@ using BuildTrackerApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BuildTrackerApi.Migrations
 {
     [DbContext(typeof(BuildTrackerContext))]
-    partial class BuildTrackerContextModelSnapshot : ModelSnapshot
+    [Migration("20200301135416_ChangeRoles")]
+    partial class ChangeRoles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,6 +40,32 @@ namespace BuildTrackerApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1000,
+                            ConcurrencyStamp = "973b061e-310b-4ccd-b5e7-0bca9563de40",
+                            Name = "USER"
+                        },
+                        new
+                        {
+                            Id = 1001,
+                            ConcurrencyStamp = "2844a0c7-47f5-46a1-8670-1ff299e50d02",
+                            Name = "DEVELOPER"
+                        },
+                        new
+                        {
+                            Id = 1002,
+                            ConcurrencyStamp = "7eb60ba2-0bd6-4b5d-86aa-b2aefb0005dc",
+                            Name = "PROJECT_MANAGER"
+                        },
+                        new
+                        {
+                            Id = 1003,
+                            ConcurrencyStamp = "6b86aec4-bd67-4fb2-aef2-81b501608a63",
+                            Name = "ADMIN"
+                        });
                 });
 
             modelBuilder.Entity("BuildTrackerApi.Models.Build", b =>
